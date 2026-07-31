@@ -1,4 +1,4 @@
-# project-start-kit
+# project-start
 
 A Claude Code plugin packaging of the `project-start` pattern: a bootstrap kit that takes an empty project folder to a fully governed ICM workspace in one flow, via an adversarial discovery interview, spec authoring, workspace scaffolding, and governance injection.
 
@@ -8,7 +8,7 @@ Full pattern documentation (what it does, when to use it, the worked example) li
 
 ```
 /plugin marketplace add ant-augment/project-start-kit
-/plugin install project-start-kit@forge-studio
+/plugin install project-start@forge-studio
 /reload-plugins
 ```
 
@@ -19,11 +19,11 @@ Or point Claude Code at this plugin directory directly if you cloned the repo lo
 Once installed, commands are namespaced by plugin name. The commands documented throughout `docs/project-start/` as `/project-start` and `/icm-sync` are invoked as:
 
 ```
-/project-start-kit:project-start
-/project-start-kit:icm-sync
+/project-start:project-start
+/project-start:icm-sync
 ```
 
-Everywhere the bundled docs and skills say `/project-start` or `/icm-sync`, read it as the namespaced form above.
+Everywhere the bundled docs and skills say `/project-start` or `/icm-sync`, read it as the namespaced form above. Note the plugin name (`project-start`) and the repo name (`project-start-kit`) differ; the marketplace add command uses the repo name, everything else uses the plugin name.
 
 ## What's inside
 

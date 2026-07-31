@@ -5,8 +5,8 @@
   },
   "plugins": [
     {
-      "name": "project-start-kit",
-      "source": "./project-start-kit",
+      "name": "project-start",
+      "source": "./project-start",
       "description": "Bootstrap kit that scaffolds a governed ICM workspace for a brand-new project via an adversarial discovery interview."
     }
   ]
