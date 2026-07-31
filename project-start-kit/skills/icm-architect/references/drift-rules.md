@@ -1,0 +1,156 @@
+# Drift Rules
+
+This file defines the eight drift patterns the `icm-architect` skill detects in sync mode, with detection cues, severity, and templated fix proposals.
+
+---
+
+## Overview
+
+Drift is any state in a workspace where the routing information in CLAUDE.md or stage CONTEXT.md files no longer accurately describes the actual file layout. Running `/icm-sync` scans for all eight patterns below and reports them prioritised by severity.
+
+**Severity levels:**
+- **Critical**: the workspace will actively mislead a new session into wrong file reads or writes.
+- **High**: a session may fail to find files it needs or write to the wrong location.
+- **Medium**: quality and consistency issues that accumulate over time.
+- **Low**: style and convention issues that do not affect routing but reduce readability.
+
+---
+
+## Drift pattern 1: Routing/filesystem mismatch
+
+**Description:** The routing tables in CLAUDE.md and stage CONTEXT.md files do not match the actual filesystem. Two directions to check:
+
+- **1a. Stale routing entry:** a file path in a routing table that does not exist on disk.
+- **1b. Undocumented file:** a file in the workspace exists but does not appear in any routing table or CONTEXT.md listing.
+
+**Detection cues:**
+- For 1a: for each file path in a routing table entry, check whether the file exists. A path that resolves to nothing is a 1a finding.
+- For 1b: for each non-hidden file in the workspace (excluding `setup/`, `archive/`, `_config/`, and conventional fixed-name files), check whether the file is mentioned in a routing entry, a stage CONTEXT.md listing, or a parent doc. A file with no mention is a 1b finding.
+
+**Severity:** 1a is **Critical**. 1b is **Medium**.
+
+**Fix proposal template (1a):**
+> "Routing entry `[file path]` in `[source file]` points to a file that does not exist. Fix options:
+> 1. Remove the routing entry if the file was intentionally deleted.
+> 2. Update the path if the file was moved or renamed.
+> 3. Create the missing file if it should exist."
+
+**Fix proposal template (1b):**
+> "File `[file path]` exists but is not mentioned in any routing table or CONTEXT.md. Fix options:
+> 1. Add a one-line entry in the nearest CONTEXT.md describing what the file is for.
+> 2. Move the file to a folder where the routing already covers its category.
+> 3. Move the file to `archive/` if it is no longer active."
+
+---
+
+## Drift pattern 2: Dead MD-to-MD links
+
+**Description:** A markdown file contains a link to another markdown file in the workspace, but the target does not exist.
+
+**Detection cues:** Scan all `.md` files for `[text](path.md)` or `[text](./path.md)` link patterns. Check whether each target exists.
+
+**Severity:** High.
+
+**Fix proposal template:**
+> "The link `[link text](path)` in `[source file]` points to `[target path]`, which does not exist. Fix options:
+> 1. Update the link target if the file was moved.
+> 2. Remove the link if the target was intentionally deleted.
+> 3. Create the missing file."
+
+---
+
+## Drift pattern 3: Naming-convention violations
+
+**Description:** A file in the workspace does not follow the naming convention recorded in CLAUDE.md.
+
+**Detection cues:** Read the naming convention from CLAUDE.md. Scan all files. Flag any file whose name does not match (wrong case style, wrong date format, wrong extension). Exclude `setup/`, `_config/`, and fixed-name convention files.
+
+**Severity:** Low (single file) or Medium (if the file appears in routing tables).
+
+**Fix proposal template:**
+> "File `[filename]` in `[folder]` does not follow the `[NAMING_STYLE]` convention recorded in CLAUDE.md. Expected name: `[corrected name]`. Rename and update any routing entries that reference the old name."
+
+---
+
+## Drift pattern 4: Empty stage outputs
+
+**Description:** A stage folder's `output/` directory is empty, but the stage's CONTEXT.md status is not "Not started" or "In progress".
+
+**Detection cues:** For each stage folder, check the `Status:` line in CONTEXT.md. If status is "complete" or absent, check whether `output/` contains at least one file.
+
+**Severity:** Medium.
+
+**Fix proposal template:**
+> "Stage `[stage folder]` is marked as `[status]` but its `output/` folder is empty. Fix options:
+> 1. Add the expected outputs to `output/`.
+> 2. Update the stage status to 'Not started' if work has not begun.
+> 3. Confirm outputs were written to a different location and update the CONTEXT.md Outputs table."
+
+---
+
+## Drift pattern 5: Missing CONTEXT.md in stage folders
+
+**Description:** A numbered stage folder (`NN_*`) exists but contains no CONTEXT.md file.
+
+**Detection cues:** Scan for folders matching the `NN_*` pattern. For each, check whether CONTEXT.md exists.
+
+**Severity:** High.
+
+**Fix proposal template:**
+> "Stage folder `[folder name]` is missing a CONTEXT.md file. A stage without a CONTEXT.md has no contract for a session to work from. Create a CONTEXT.md using the stage template, or remove the folder if this stage is not yet ready."
+
+---
+
+## Drift pattern 6: Stale references in Inputs tables
+
+**Description:** A stage CONTEXT.md Inputs table references a file that no longer exists at the stated path.
+
+**Detection cues:** Scan all stage CONTEXT.md Inputs tables. For each file path, check whether the file exists.
+
+**Severity:** High.
+
+**Fix proposal template:**
+> "The Inputs table in `[stage folder]/CONTEXT.md` references `[file path]`, which does not exist. Fix options:
+> 1. Update the path if the file was moved or renamed.
+> 2. Remove the input entry if the file is no longer needed.
+> 3. Create the missing file."
+
+---
+
+## Drift pattern 7: Archived files in active folders
+
+**Description:** A file that should be archived is still in an active folder.
+
+**Detection cues:** Look for files with archival suffixes (`_old`, `_backup`, `_v1`, `_v2`, `_draft`) alongside a file with the same base name without the suffix. Look for files with archival prefixes (`old-`, `archived-`, `superseded-`, `wip-`). Look for date-prefixed files older than 90 days in `output/` alongside newer files with the same base name.
+
+**Severity:** Medium.
+
+**Fix proposal template:**
+> "File `[filename]` in `[folder]` appears to be a superseded version. The current version is `[current file]`. Fix: move `[filename]` to `archive/` to prevent it from being confused with the current version."
+
+---
+
+## Drift pattern 8: Layer 3 changes not propagated
+
+**Description:** A reference file listed in a stage's Inputs table has not been confirmed current since the stage moved past "Not started".
+
+**Detection cues:** For each stage CONTEXT.md with a Status that is not "Not started", check the Inputs table. If any row has "Last reviewed" as `pending` or blank, flag it. If "Last reviewed" is older than 30 days, also flag it.
+
+**Severity:** Medium.
+
+**Fix proposal template:**
+> "Stage `[stage folder]` Inputs table row for `[file]` shows Last reviewed: `[pending or date]`. Fix: open `[stage folder]/CONTEXT.md`, confirm the row still reflects the current content of `[file]`, and update the Last reviewed column to `<!-- last reviewed: [today's date] -->`."
+
+---
+
+## Reporting format
+
+When `/icm-sync` runs, it reports all detected drift in this order:
+1. Critical findings (all, in file order)
+2. High findings (all, in file order)
+3. Medium findings (all, in file order)
+4. Low findings (all, in file order)
+
+Each finding is presented with the drift pattern number and name, the file and location, the fix proposal, and a prompt: "Apply this fix? [YES / NO / SKIP]"
+
+The builder's response is collected for each finding before the next is shown. "SKIP" defers the finding without fixing it.

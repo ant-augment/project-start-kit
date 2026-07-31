@@ -1,0 +1,39 @@
+# Workspace Context
+
+## What this workspace is for
+
+{{WORKSPACE_PURPOSE}}
+
+## Current project
+
+{{CURRENT_PROJECT_DESCRIPTION}}
+
+## What good looks like
+
+{{SUCCESS_CRITERIA}}
+
+## What to avoid
+
+{{THINGS_TO_AVOID}}
+
+## Active tasks
+
+<!-- Update this section at the start of each session. List what is in progress. -->
+
+- [ ] {{ACTIVE_TASK_1_PLACEHOLDER}}
+
+## Files in this workspace
+
+| File or folder | Purpose |
+|---|---|
+| CLAUDE.md | Identity and routing map |
+| CONTEXT.md | This file: current project context |
+| {{WORKSPACE_FOLDER_1}}/ | {{WORKSPACE_FOLDER_1_PURPOSE}} |
+| {{WORKSPACE_FOLDER_2}}/ | {{WORKSPACE_FOLDER_2_PURPOSE}} |
+| references/ | Background material and guides |
+| inputs/ | Client files, decision notes, incoming reference material |
+| specs/ | Spec documents from project-start onboarding |
+
+## Process notes
+
+{{PROCESS_NOTES}}

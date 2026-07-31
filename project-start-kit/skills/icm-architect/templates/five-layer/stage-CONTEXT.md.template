@@ -1,0 +1,51 @@
+# Stage {{STAGE_NUMBER}}: {{STAGE_NAME}}
+
+Status: Not started
+
+---
+
+## Purpose
+
+{{STAGE_PURPOSE}}
+
+## Inputs
+
+| File | Source | Status | Last reviewed |
+|---|---|---|---|
+| {{INPUT_FILE_1}} | {{INPUT_SOURCE_1}} | Pending | <!-- last reviewed: pending --> |
+| {{INPUT_FILE_2}} | {{INPUT_SOURCE_2}} | Pending | <!-- last reviewed: pending --> |
+
+When you confirm a reference is still current, update the Last reviewed column to `<!-- last reviewed: YYYY-MM-DD -->`. When a reference changes, reset the marker to `pending` until re-confirmed. `/icm-sync` Rule 8 reads this column.
+
+## Process
+
+{{STAGE_PROCESS_DESCRIPTION}}
+
+Steps:
+1. {{STEP_1}}
+2. {{STEP_2}}
+3. {{STEP_3}}
+
+## Outputs
+
+| File | Destination | Description |
+|---|---|---|
+| output/{{OUTPUT_FILE_1}} | {{OUTPUT_DEST_1}} | {{OUTPUT_DESC_1}} |
+
+## References
+
+The following reference files are used in this stage:
+
+| File | Purpose |
+|---|---|
+| references/{{STAGE_REF_1}} | {{STAGE_REF_1_PURPOSE}} |
+| ../references/{{SHARED_REF_1}} | {{SHARED_REF_1_PURPOSE}} |
+
+## Hand-off checklist
+
+Before marking this stage complete:
+
+- [ ] All expected outputs exist in output/
+- [ ] Output file paths are recorded in the next stage's Inputs table
+- [ ] CLAUDE.md routing table updated if new file types were created
+- [ ] Status above updated to "complete"

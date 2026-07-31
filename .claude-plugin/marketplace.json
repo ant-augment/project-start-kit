@@ -1,0 +1,13 @@
+{
+  "name": "forge-studio",
+  "owner": {
+    "name": "antbrowne-design"
+  },
+  "plugins": [
+    {
+      "name": "project-start-kit",
+      "source": "./project-start-kit",
+      "description": "Bootstrap kit that scaffolds a governed ICM workspace for a brand-new project via an adversarial discovery interview."
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+# References
+
+This file contains background material Claude should always have available when working in this workspace. Update it as your reference material evolves.
+
+---
+
+{{#each REFERENCE_SECTIONS}}
+## {{this.heading}}
+
+{{this.placeholder_content}}
+
+---
+{{/each}}
+
+<!-- Template note: the skill seeds headings from the reference types named in your setup questionnaire.
+     Replace the placeholder content above with your actual reference material.
+     You may split large reference sections into separate files in references/ and link to them from here. -->

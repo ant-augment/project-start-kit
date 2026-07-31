@@ -1,0 +1,38 @@
+# Workspace Context
+
+## What this workspace is for
+
+{{WORKSPACE_PURPOSE}}
+
+## Stages overview
+
+| Stage | Folder | Status | Brief description |
+|---|---|---|---|
+| Stage 1: {{STAGE_1_NAME}} | {{STAGE_1_FOLDER}}/ | Not started | {{STAGE_1_DESCRIPTION}} |
+| Stage 2: {{STAGE_2_NAME}} | {{STAGE_2_FOLDER}}/ | Not started | {{STAGE_2_DESCRIPTION}} |
+| Stage 3: {{STAGE_3_NAME}} | {{STAGE_3_FOLDER}}/ | Not started | {{STAGE_3_DESCRIPTION}} |
+
+## What good looks like
+
+{{SUCCESS_CRITERIA}}
+
+## What to avoid
+
+{{THINGS_TO_AVOID}}
+
+## Shared references
+
+The following cross-stage reference files are available to all stages:
+
+| File | Purpose |
+|---|---|
+| references/{{SHARED_REF_1}} | {{SHARED_REF_1_PURPOSE}} |
+| references/{{SHARED_REF_2}} | {{SHARED_REF_2_PURPOSE}} |
+
+## Inputs folder
+
+The `inputs/` folder receives client files, decision notes, and incoming reference material that does not yet belong to a specific stage.
+
+## Process notes
+
+{{PROCESS_NOTES}}
