@@ -1,6 +1,6 @@
 {
   "name": "project-start",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Bootstrap kit for brand-new projects: runs an adversarial discovery interview, authors one spec per deliverable, and scaffolds a governed ICM workspace with maintenance protocol, stance, anti-AI writing rules, and model-tiering, plus a drift-check hook. Use at the very start of a new project, before any code.",
   "author": {
     "name": "antbrowne-design",

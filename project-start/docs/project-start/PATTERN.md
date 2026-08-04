@@ -6,7 +6,7 @@ description: >
   maintenance protocol, stance, anti-AI writing rules, and model-tiering, with a PostToolUse
   hook that self-heals routing drift (emits additionalContext to the session). Supersedes
   icm-init for new projects. Use it at the very start of a new project, before any code.
-version: 0.2.2
+version: 0.2.3
 tags: onboarding, icm, project-setup, model-tiering, governance, hooks
 ---
 

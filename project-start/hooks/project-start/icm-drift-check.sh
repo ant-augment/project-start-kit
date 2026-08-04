@@ -58,8 +58,23 @@ FOUND=0
 # Drift check 1a: Stale routing entry.
 # Look for markdown link targets in the routing table that do not exist.
 # We match lines from the routing table that contain a file path (not a URL).
+#
+# Scope: ONLY the "## Routing table" section, not the whole file. CLAUDE.md
+# prose elsewhere (Identity, Naming conventions examples, etc.) routinely
+# mentions filenames like `design.md` or "Example: 2026-08-03-test-results.md"
+# that are illustrative, not routing entries -- scanning the whole file
+# treats those as stale paths and false-positives on every run.
 # -----------------------------------------------------------------------
+ROUTING_BLOCK="/tmp/icm_routing_$$"
+awk '/^## Routing table/{flag=1; next} /^## /{flag=0} flag' "$CLAUDE_MD" > "$ROUTING_BLOCK"
 while IFS= read -r line; do
+    # Table rows are "| Task type | Read first | Also load | Skip |". Column 1
+    # (Task type) is a prose description of the row and routinely names a file
+    # in passing (e.g. "Planning the design.md format...") without that being a
+    # routing path -- strip it before matching so only columns 2-4 are checked.
+    case "$line" in
+        \|*) line=$(printf '%s\n' "$line" | sed -E 's/^\|[^|]*\|//') ;;
+    esac
     paths=$(printf '%s\n' "$line" | grep -oE '[A-Za-z0-9_./][A-Za-z0-9_./-]+\.(md|json|sh)' 2>/dev/null || true)
     for path in $paths; do
         case "$path" in
@@ -72,7 +87,8 @@ while IFS= read -r line; do
             FOUND=1
         fi
     done
-done < "$CLAUDE_MD"
+done < "$ROUTING_BLOCK"
+rm -f "$ROUTING_BLOCK"
 
 # -----------------------------------------------------------------------
 # Drift check 1b: Undocumented new top-level file.
@@ -97,7 +113,7 @@ done
 # Run in a subshell; write findings to the temp file directly so they are
 # not lost when the subshell exits.
 # -----------------------------------------------------------------------
-find "$WORKSPACE_ROOT" -name "*.md" -not -path "*/archive/*" -not -path "*/.git/*" | while IFS= read -r mdfile; do
+find "$WORKSPACE_ROOT" -name "*.md" -not -path "*/archive/*" -not -path "*/.git/*" -not -path "*/.claude/*" | while IFS= read -r mdfile; do
     grep -oE '\[([^]]+)\]\(([^)]+\.md)\)' "$mdfile" 2>/dev/null | while IFS= read -r match; do
         target=$(printf '%s\n' "$match" | sed 's/.*](\(.*\))/\1/')
         case "$target" in http*) continue ;; esac

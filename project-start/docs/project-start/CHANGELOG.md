@@ -4,6 +4,12 @@ All notable changes to the project-start pattern are recorded here in reverse ch
 
 ---
 
+## 0.2.3 -- 2026-08-04
+
+- **Fixed two false-positive drift patterns in `icm-drift-check.sh`.** DRIFT-1a now scans only the `## Routing table` section instead of the whole `CLAUDE.md`, and strips the table's leading "Task type" column before matching, so prose mentions of filenames (for example "Planning the design.md format...") are no longer misread as stale routing entries. DRIFT-2 now excludes `.claude/` from its dead-link scan, so a skill's own reference documentation that shows the `[text](path.md)` link pattern as a literal example is no longer misread as a broken link. Fix originated and was verified in a destination workspace running an exported copy of this hook, then synced forward into the pattern's canonical source per the local-install-guard convention.
+
+---
+
 ## 0.2.2 -- 2026-07-30
 
 - **Model bindings refreshed to the current lineup.** `models.config.md` moves `top` from `claude-opus-4-8` to `claude-opus-5` and `mid` from `claude-sonnet-4-6` to `claude-sonnet-5`; `light` stays on `claude-haiku-4-5`. The aliases (`opus`, `sonnet`, `haiku`) are unchanged, so nothing downstream of the config moves. Added an explicit verification date to the bindings table, and named `fable` as the more capable option along with the three reasons it is deliberately not the default: pricing above the opus tier, always-on thinking (no cheap mode), and a stricter data-retention requirement. The v0.2.1 entry below predicted this staleness and this release is the first time that prediction was acted on.
