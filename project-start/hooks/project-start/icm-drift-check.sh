@@ -1,7 +1,19 @@
 #!/bin/sh
 # icm-drift-check.sh
+# version: 0.3.0
 # PostToolUse hook for ICM workspaces.
 # Checks four structural drift patterns after every Write or Edit tool call.
+#
+# Canonical location: .claude/hooks/icm-drift-check.sh, invoked from settings.json
+# via "sh \"$CLAUDE_PROJECT_DIR/.claude/hooks/icm-drift-check.sh\"". This is the
+# only supported placement as of 0.3.0; see INSTALL.md "Upgrading" for prior
+# placements and how to move to this one.
+#
+# No installed copy of this script identifies its own version to a human reading
+# a drift report in the terminal; the version above is for a builder diffing two
+# copies (grep "^# version:") to tell a stale install from a current one, and it
+# is echoed into the emitted directive below so a report is traceable to the
+# script that produced it.
 # Emits hookSpecificOutput.additionalContext JSON to the session when drift is detected,
 # so the model reads the directive and acts on it in the same turn.
 #
@@ -67,6 +79,33 @@ FOUND=0
 # -----------------------------------------------------------------------
 ROUTING_BLOCK="/tmp/icm_routing_$$"
 awk '/^## Routing table/{flag=1; next} /^## /{flag=0} flag' "$CLAUDE_MD" > "$ROUTING_BLOCK"
+
+# -----------------------------------------------------------------------
+# Fail closed, not open. If no line begins exactly "## Routing table"
+# (case-sensitive), the awk scope above matched nothing and the loop
+# below runs zero times -- which looks identical to "checked, found no
+# stale entries". A workspace whose routing section is headed anything
+# else (a typo, a different convention, a hand-authored CLAUDE.md this
+# hook was never generated for) would have its Critical-severity check
+# silently disabled with no signal to the session or the builder. Report
+# the skip explicitly instead of staying silent.
+# -----------------------------------------------------------------------
+# grep -c always prints a count, including 0, but exits non-zero when the
+# count is 0. Two traps here, both hit during testing, both worth recording:
+# (1) "|| printf '0'" is wrong -- grep's own "0" is already on stdout by the
+#     time it exits non-zero, so the fallback appends a second "0" inside the
+#     same command substitution, producing "0\n0" and breaking the -eq test
+#     below with "integer expression expected".
+# (2) A bare failing command substitution in an assignment ("X=$(cmd)") trips
+#     `set -e` in this shell when cmd exits non-zero, even though the value
+#     assigned is fine. "|| true" absorbs the exit status without touching
+#     stdout, since true prints nothing.
+HEADING_COUNT=$(grep -c "^## Routing table" "$CLAUDE_MD" || true)
+if [ "$HEADING_COUNT" -eq 0 ]; then
+    printf 'DRIFT-1a-SKIPPED: no '\''## Routing table'\'' heading (exact, case-sensitive) found in CLAUDE.md. The stale-routing-entry check did not run. If this workspace names its routing section something else, this check cannot see it and needs the heading text or the hook updated to match.\n' >> "$TMPFILE"
+    FOUND=1
+fi
+
 while IFS= read -r line; do
     # Table rows are "| Task type | Read first | Also load | Skip |". Column 1
     # (Task type) is a prose description of the row and routinely names a file
@@ -109,11 +148,24 @@ done
 
 # -----------------------------------------------------------------------
 # Drift check 2: Dead MD-to-MD links.
-# Scan all .md files for [text](path.md) links whose targets do not exist.
+# Scan all .md files for markdown links pointing at another local .md
+# file, and check whether the target exists.
+#
+# No .claude/ exclusion here. An earlier version of this check excluded
+# .claude/ to hide two literal link-syntax examples inside this pattern's
+# own bundled drift-rules.md, which is documentation, not the intended
+# scope of this check -- and drift-rules.md's own prose still described
+# the check as scanning "all .md files", so /icm-sync (which reads that
+# file rather than this exclusion) kept reporting the same two false
+# positives the exclusion claimed to fix. Fixed the source instead: the
+# two examples in drift-rules.md no longer form a real link pattern. If a
+# workspace's own .claude/ tree ever contains a genuinely dead .md link,
+# this check should find it like anywhere else.
+#
 # Run in a subshell; write findings to the temp file directly so they are
 # not lost when the subshell exits.
 # -----------------------------------------------------------------------
-find "$WORKSPACE_ROOT" -name "*.md" -not -path "*/archive/*" -not -path "*/.git/*" -not -path "*/.claude/*" | while IFS= read -r mdfile; do
+find "$WORKSPACE_ROOT" -name "*.md" -not -path "*/archive/*" -not -path "*/.git/*" | while IFS= read -r mdfile; do
     grep -oE '\[([^]]+)\]\(([^)]+\.md)\)' "$mdfile" 2>/dev/null | while IFS= read -r match; do
         target=$(printf '%s\n' "$match" | sed 's/.*](\(.*\))/\1/')
         case "$target" in http*) continue ;; esac
@@ -171,7 +223,7 @@ done
 #   After step 2: 'path \"foo.md\" not found'. Valid inside JSON string.
 # -----------------------------------------------------------------------
 if [ "$FOUND" -eq 1 ]; then
-    printf 'Fix directive: address each finding above before continuing. Update CLAUDE.md routing, create missing files, or remove stale entries as indicated. Run /icm-sync for a full audit including semantic drift patterns.\n' >> "$TMPFILE"
+    printf 'Fix directive: address each finding above before continuing. Update CLAUDE.md routing, create missing files, or remove stale entries as indicated. Run /icm-sync for a full audit including semantic drift patterns. (icm-drift-check.sh version 0.3.0)\n' >> "$TMPFILE"
 
     ESCAPED=$(sed 's/\\/\\\\/g' "$TMPFILE")
     ESCAPED=$(printf '%s' "$ESCAPED" | sed 's/"/\\"/g')

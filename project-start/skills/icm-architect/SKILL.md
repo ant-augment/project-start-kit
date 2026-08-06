@@ -1,7 +1,7 @@
 ---
 name: icm-architect
-description: Use whenever a user wants to scaffold an ICM workspace from scratch, inject governance blocks into an existing CLAUDE.md, audit an existing ICM workspace for drift, or run the Stage C + Stage D phases of /project-start. Triggers on "/project-start" (Stages C+D), "/icm-sync", "scaffold a workspace", "set up a project folder", "audit this workspace", "sync the docs", "is anything stale here", or any request to initialise a structured project context for ongoing Claude work. Runs in three modes: init (creates a workspace from questionnaire answers), governance-injection (injects the four governed blocks and activates hooks), and sync (audits an existing workspace and offers drift fixes). Always read this file before running any command.
-version: 0.1.0
+description: Fires only in a workspace that has, or is about to have, a root CLAUDE.md governed by the ICM method. Does not fire for source-tree scaffolding (creating a src/ layout, a repo skeleton, or a dependency setup), or for updating documentation content to match code changes. Use whenever a user wants to scaffold an ICM workspace from scratch, inject governance blocks into an existing CLAUDE.md, audit an existing ICM workspace for drift, or run the Stage C + Stage D phases of /project-start. Also use to install the automatic drift-check hook into an existing ICM workspace, when a user asks for routing or docs to stay in sync, self-heal, or be checked automatically rather than by running a command by hand. Triggers on "/project-start" (Stages C+D), "/icm-sync", "scaffold an ICM workspace", "set up a governed CLAUDE.md project folder", "audit this ICM workspace for drift", "sync the ICM routing docs", "is the routing stale in this workspace". Runs in three modes: init (creates a workspace from questionnaire answers), governance-injection (injects the four governed blocks and activates hooks), and sync (audits an existing workspace and offers drift fixes). Always read this file before running any command.
+version: 0.3.0
 ---
 
 # ICM Architect
@@ -158,14 +158,14 @@ If no variant was given, replace it with `British English (UK)` and note in the 
 
 ---
 
-### Step 3: Write the hook files
+### Step 3: Verify the hook files
 
-Write `icm-drift-check.sh` to the workspace root (or `.claude/hooks/` if that folder exists).
-Write `settings.json` alongside it.
+This step verifies; it does not write. The hook files are part of `bootstrap-kit/`'s initial copy (`INSTALL.md` Step 1), already at `.claude/hooks/icm-drift-check.sh` and `.claude/settings.json` before `/project-start` ever ran. There is no `./templates/hooks/` in this skill: the hook is not a template this step fills in, it is a file the builder already has. Writing a fresh copy here would either trigger the per-file overwrite confirmation required by the Hard Rules below, or silently diverge from whatever the builder actually has in place. Neither is acceptable, so do not write.
 
-Read the hook content from `./templates/hooks/icm-drift-check.sh` and `./templates/hooks/settings.json`.
-
-Tell the builder: "Make the hook executable with `chmod +x icm-drift-check.sh` (or the path where you placed it)."
+Verify, and report any mismatch rather than silently fixing it:
+1. `.claude/hooks/icm-drift-check.sh` exists.
+2. `.claude/settings.json` exists and its `PostToolUse` hook's `command` field references `.claude/hooks/icm-drift-check.sh` at that exact path (case and location must match; a mismatch means the hook is wired to a script that will not run, and the failure is silent -- no error, the check simply never fires).
+3. If either file is missing or the path in `command` does not match, stop and tell the builder to re-run `INSTALL.md` Step 1 before continuing. Do not write a substitute copy from memory: this skill does not carry the hook's content, `bootstrap-kit/hooks/` does.
 
 ---
 
@@ -173,7 +173,7 @@ Tell the builder: "Make the hook executable with `chmod +x icm-drift-check.sh` (
 
 - Confirm all four governed blocks are present in CLAUDE.md in the correct order.
 - Confirm `inputs/` exists and is in the routing table.
-- Confirm `settings.json` references the hook script at the path you wrote it to.
+- Confirm `.claude/settings.json`'s command references `.claude/hooks/icm-drift-check.sh` at the exact path verified in Step 3.
 - Confirm `specs/` contains at least one spec file (or is empty with a note if Stage B was skipped).
 
 Tell the builder:

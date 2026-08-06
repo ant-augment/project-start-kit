@@ -6,9 +6,8 @@ This document describes the runtime flow from the moment the builder runs `/proj
 
 ## Prerequisites
 
-- You have copied `bootstrap-kit/` into an empty project folder.
+- You have copied `bootstrap-kit/` into an empty project folder, with the hook at `.claude/hooks/icm-drift-check.sh` and `.claude/settings.json` (the only supported location as of 0.3.0; the hook is invoked via `sh`, so no executable bit is required).
 - You have an active Claude Code session in that folder.
-- You have run `chmod +x .claude/hooks/icm-drift-check.sh` (or wherever you placed the hook).
 
 See `bootstrap-kit/INSTALL.md` if you have not done these steps yet.
 
@@ -88,9 +87,7 @@ The four governed blocks are injected into the root `CLAUDE.md` in this order:
 3. **Anti-AI writing block.** Em-dash ban, hype-word blacklist, no "just/simply", English variant filled from your Stage A answer. Injected from `templates/governance/anti-ai-block.md`.
 4. **Model-tiering block.** Task classes per tier (top, mid, light) plus auto-delegate instruction. Injected from `templates/governance/tiering-block.md`.
 
-The hook files are written:
-- `icm-drift-check.sh` is written to the workspace root (or `.claude/hooks/` if that folder exists).
-- `settings.json` is written alongside it, wiring the hook to `PostToolUse` on `Write|Edit`.
+The hook files are verified, not written: `.claude/hooks/icm-drift-check.sh` and `.claude/settings.json` came from the Step 1 copy in `INSTALL.md`, before `/project-start` ever ran. Stage D confirms `settings.json`'s `PostToolUse` command points at the hook script at its actual path, and stops rather than improvising a replacement if either file is missing.
 
 The skill writes the `specs/` folder contents if not already written.
 
@@ -104,8 +101,8 @@ After Stage D, the `icm-drift-check.sh` hook runs automatically after every `Wri
 
 The hook checks four structural drift patterns:
 
-1. **Stale routing entry.** A path in the `CLAUDE.md` routing table does not exist on disk.
-2. **Undocumented new top-level file.** A file exists at the workspace root but has no routing table entry.
+1. **Stale routing entry.** A path in the `CLAUDE.md` routing table does not exist on disk. This check depends on the routing section being headed exactly `## Routing table`; if that heading is not found, the hook reports `DRIFT-1a-SKIPPED` instead of silently reporting nothing, so a missing or renamed heading is visible rather than indistinguishable from a clean pass.
+2. **Undocumented new top-level file.** A file exists at the workspace root but has no routing table entry (checked against the whole file, not just the routing section, so a mention anywhere in `CLAUDE.md` counts).
 3. **Dead MD link.** A `.md` file contains a link to another `.md` file that does not exist.
 4. **Missing stage `CONTEXT.md`.** A numbered stage folder (`NN_*`) exists but has no `CONTEXT.md`.
 
@@ -156,6 +153,6 @@ Run `/icm-sync` periodically or after any major structural change.
 
 **Leaving the English variant blank.** If you skip the English variant question, the anti-AI block will contain a placeholder. Fill it in manually before your first working session, or run `/project-start` again with a clearer answer to the variant question.
 
-**Not making the hook script executable.** On Unix systems, the hook script must be executable (`chmod +x`). Claude Code will not run it otherwise.
+**Placing the hook somewhere other than `.claude/hooks/`.** The hook is invoked as `sh "$CLAUDE_PROJECT_DIR/.claude/hooks/icm-drift-check.sh"`, so no executable bit is required, but the path in `.claude/settings.json` must match exactly. A hook at the workspace root with `settings.json` still pointing at `.claude/hooks/` (or vice versa) fails silently: no error, the check simply never fires.
 
 **Forgetting to update `models.config.md`.** When a new model releases or an old one is deprecated, open `models.config.md` and update the alias column. No other file needs changing. Tiers are always named by capability (top, mid, light) everywhere else.

@@ -151,6 +151,7 @@ Tell the builder:
 
 - `./references/interview-protocol.md` -- the eight topic areas, AskUserQuestion phrasing, free-form fallback phrasing, adversarial challenge examples.
 - `./references/verbatim-recording-rule.md` -- how to record answers and when to challenge.
+- `./references/interview-transcript-template.md` -- the full `setup/interview.md` shape: per-topic transcript sections plus the structured summary `icm-architect` reads to pre-fill Stage C.
 - `./references/spec-template.md` -- the five-section spec structure with filling instructions.
 - `./references/one-or-many-specs-decision.md` -- when to produce one spec vs many, and how to recommend a layer model from spec structure.
 

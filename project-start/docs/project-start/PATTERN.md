@@ -6,7 +6,7 @@ description: >
   maintenance protocol, stance, anti-AI writing rules, and model-tiering, with a PostToolUse
   hook that self-heals routing drift (emits additionalContext to the session). Supersedes
   icm-init for new projects. Use it at the very start of a new project, before any code.
-version: 0.2.3
+version: 0.3.0
 tags: onboarding, icm, project-setup, model-tiering, governance, hooks
 ---
 
@@ -89,8 +89,8 @@ The pattern runs an adversarial discovery interview, authors one or more spec do
 - [ ] Root `CLAUDE.md` contains the four governed blocks in order: maintenance protocol, stance block, anti-AI block, tiering block.
 - [ ] The anti-AI block's English variant placeholder is filled from the interview answer.
 - [ ] `specs/` folder exists with one spec file per deliverable.
-- [ ] `settings.json` written with the `PostToolUse` hook wired to `icm-drift-check.sh`.
-- [ ] Hook script and `settings.json` are at the workspace root or `.claude/` as appropriate.
+- [ ] `.claude/settings.json`'s `PostToolUse` hook is wired to `.claude/hooks/icm-drift-check.sh` at that exact path -- the only supported location as of 0.3.0.
+- [ ] Hook script and `settings.json` were verified against the copy `INSTALL.md` Step 1 placed, not freshly written by this stage.
 
 ---
 
@@ -103,7 +103,7 @@ The pattern runs an adversarial discovery interview, authors one or more spec do
 1. `/project-start` loads the `project-scoping` skill and runs it in interview mode (Stage A). The skill records the transcript verbatim to `setup/interview.md`.
 2. `project-scoping` switches to spec-authoring mode (Stage B). The builder confirms the specs. Specs are written to `specs/`.
 3. `/project-start` then loads the `icm-architect` skill and runs it in init mode (Stage C). The architect reads `setup/interview.md` to inform questionnaire answers. It proposes a plan and waits for builder confirmation before writing any files.
-4. `icm-architect` runs governance injection (Stage D). The four governed blocks are injected into `CLAUDE.md`. The hook files are written.
+4. `icm-architect` runs governance injection (Stage D). The four governed blocks are injected into `CLAUDE.md`. The hook files are verified against the copy `INSTALL.md` Step 1 already placed, not written fresh.
 5. The skill performs a self-check: every routing table path resolves to a file. It then confirms completion to the builder.
 
 **Shared state.** `setup/interview.md` is the handoff artefact between Stage A/B and Stage C/D. It carries the verbatim transcript and a structured summary used by `icm-architect` to pre-fill questionnaire answers.
@@ -146,7 +146,7 @@ Copy the contents of `bootstrap-kit/` into the root of your empty project folder
 - `.claude/commands/icm-sync.md`
 - `.claude/skills/project-scoping/` (with `SKILL.md` and `references/`)
 - `.claude/skills/icm-architect/` (with `SKILL.md`, `references/`, `templates/`, `archetypes/`)
-- `bootstrap-kit/hooks/icm-drift-check.sh` and `bootstrap-kit/hooks/settings.json` (copy to your workspace root or `.claude/hooks/` as your project requires)
+- `bootstrap-kit/hooks/icm-drift-check.sh` and `bootstrap-kit/hooks/settings.json`, copied to `.claude/hooks/icm-drift-check.sh` and `.claude/settings.json` respectively -- the only supported location as of 0.3.0
 
 See `bootstrap-kit/INSTALL.md` for the exact copy commands.
 
@@ -173,7 +173,7 @@ In a new Claude Code session in your project folder, run `/project-start`. The c
 After the first run:
 - Fill in the reference files under `references/` with your actual content.
 - Review the anti-AI block in `CLAUDE.md` and adjust the hype-word blacklist to your domain.
-- Verify that the hook script is executable (`chmod +x icm-drift-check.sh`) and that `settings.json` is where Claude Code expects it.
+- Verify `.claude/settings.json`'s `command` references `.claude/hooks/icm-drift-check.sh` at that exact path (no executable bit needed; the hook runs via `sh`).
 - Run `/icm-sync` after your first working session to catch any immediate drift.
 
 **Customising the governance blocks.**
@@ -191,6 +191,10 @@ The four governed blocks are templates; you own them once they are generated. Co
 ## Known limitations
 
 **Shell hook catches structural drift only.** The `icm-drift-check.sh` hook emits `hookSpecificOutput.additionalContext` (verified against current Claude Code), so its drift directive reaches the model on the next turn. It checks four structural patterns: stale routing entries, undocumented top-level files, dead MD links, and missing stage CONTEXT.md files. Semantic drift patterns (Layer 3 propagation, naming judgement) are not amenable to shell inspection; run `/icm-sync` for those.
+
+**Drift check 1a (stale routing entry) requires the routing section in `CLAUDE.md` to be headed exactly `## Routing table`.** Both bundled layer templates satisfy this by construction. A hand-authored `CLAUDE.md` this pattern did not generate, or a workspace where the heading was later renamed, will not: the check reports `DRIFT-1a-SKIPPED` rather than silently checking nothing, but it still cannot detect stale routing entries until the heading matches. There is no heading-name configuration; renaming the section in `CLAUDE.md` back to the exact string is the fix.
+
+**The hook and its config have exactly one supported location.** `.claude/hooks/icm-drift-check.sh` and `.claude/settings.json`, as of 0.3.0. Earlier versions offered a workspace-root alternative; that hedge is what let the hook script and the `settings.json` command string pointing at it drift apart silently. If you maintain a fork of this pattern with a different convention, the `command` string in `settings.json` and the path documented across `INSTALL.md`, `WORKFLOW.md`, and `icm-architect/SKILL.md`'s Stage D must all agree, or the hook goes silently inert.
 
 **Interview quality depends on builder engagement.** The adversarial interview is only as good as the builder's answers. Sparse one-word answers produce a weaker spec and a less well-adapted workspace. The skill challenges vague answers once; it does not loop indefinitely.
 

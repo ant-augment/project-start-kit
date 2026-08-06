@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}\"/hooks/project-start/icm-drift-check.sh"
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/project-start/icm-drift-check.sh\""
           }
         ]
       }
